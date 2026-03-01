@@ -1,5 +1,4 @@
 name: DevOps Project CI/CD
-
 on:
   push:
     branches: [ main ]
@@ -33,12 +32,13 @@ jobs:
         docker build -t $ECR_REPOSITORY ./app
 
     - name: Scan image with Trivy
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: ${{ env.ECR_REPOSITORY }}
-        format: table
-        exit-code: 0
-        severity: HIGH,CRITICAL
+      run: |
+        docker run --rm \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest image \
+          --severity HIGH,CRITICAL \
+          --exit-code 0 \
+          $ECR_REPOSITORY:latest
 
     - name: Tag and push image to ECR
       run: |
@@ -48,9 +48,11 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
 
-    - name: Update kubeconfig
+    - name: Install kubectl
       run: |
-        aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/kubectl
 
     - name: Deploy to EKS
       run: |
