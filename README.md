@@ -51,7 +51,6 @@ Built with Terraform:
 ## 📊 Monitoring
 
 ![Cluster Dashboard](docs/cluster-dashboard.png)
-![Node Metrics](docs/node-metrics.png)
 
 - Prometheus scrapes metrics from all pods and nodes
 - Grafana dashboards for cluster, node and pod monitoring
